@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+opencv-python
+deepface
+pydantic
+requests
+numpy
+tensorflow
+torch
