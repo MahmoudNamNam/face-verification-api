@@ -7,6 +7,7 @@ import requests
 import shutil
 import logging
 from typing import Optional
+import uvicorn
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -91,3 +92,7 @@ async def verify_face(request: FaceVerificationRequest):
     except Exception as e:
         logger.error(f"Verification failed: {e}")
         return {"error": str(e)}
+
+# Run the FastAPI app with Uvicorn when executed directly
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
