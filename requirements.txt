@@ -1,7 +1,11 @@
-deepface==0.0.93
 fastapi==0.115.12
-opencv_python==4.11.0.86
-opencv_python_headless==4.11.0.86
+uvicorn[standard]==0.29.0 
 pydantic==2.11.3
+
+deepface==0.0.93
+tensorflow==2.19.0   
+tf-keras==2.19.0      
+opencv-python-headless==4.11.0.86 
+mtcnn==0.1.1           
+
 Requests==2.32.3
-uvicorn
