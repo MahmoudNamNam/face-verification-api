@@ -92,6 +92,10 @@ async def verify_face(request: FaceVerificationRequest):
     except Exception as e:
         logger.error(f"Verification failed: {e}")
         return {"error": str(e)}
+    
+@app.get("/")
+async def root():
+    return {"message": "Face Verification API!"}
 
 # Run the FastAPI app with Uvicorn when executed directly
 if __name__ == "__main__":
