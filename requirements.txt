@@ -1,9 +1,7 @@
-fastapi
-uvicorn[standard]
-opencv-python
-deepface
-pydantic
-requests
-numpy
-tensorflow
-torch
+deepface==0.0.93
+fastapi==0.115.12
+opencv_python==4.11.0.86
+opencv_python_headless==4.11.0.86
+pydantic==2.11.5
+Requests==2.32.3
+uvicorn==0.34.2
