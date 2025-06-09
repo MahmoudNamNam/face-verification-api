@@ -9,14 +9,19 @@ import shutil
 import logging
 from typing import Optional
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  
-# Logger setup
+# --- ENVIRONMENT CONFIG ---
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1" 
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0" 
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"   
+
+# --- Logging Setup ---
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --- FastAPI Setup ---
 app = FastAPI()
 
-# CORS
+# --- CORS for frontend access ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,13 +30,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request schema
+# --- Request Schema ---
 class FaceVerificationRequest(BaseModel):
     id_url: str
     ref_url: str
 
+# --- Preload SFace model on startup ---
+model_sface = None
+
+@app.on_event("startup")
+def preload_model():
+    global model_sface
+    model_sface = DeepFace.build_model("SFace")
+    logger.info("✅ SFace model preloaded successfully.")
+
+# --- Helper Function to Download Images ---
 def download_image(url: str) -> Optional[str]:
-    """Download an image from a URL."""
     try:
         response = requests.get(url, stream=True, timeout=8)
         response.raise_for_status()
@@ -43,9 +57,9 @@ def download_image(url: str) -> Optional[str]:
         logger.error(f"Error downloading image: {e}")
         return None
 
+# --- POST /verify ---
 @app.post("/verify")
 async def verify_face(request: FaceVerificationRequest):
-    """Verify if two faces match."""
     id_path = download_image(request.id_url)
     ref_path = download_image(request.ref_url)
 
@@ -56,8 +70,9 @@ async def verify_face(request: FaceVerificationRequest):
         result = DeepFace.verify(
             img1_path=id_path,
             img2_path=ref_path,
-            model_name="SFace",  
-            detector_backend="opencv",  
+            model_name="SFace",
+            model=model_sface,  # Reuse preloaded model
+            detector_backend="opencv",
             enforce_detection=False
         )
 
@@ -65,18 +80,20 @@ async def verify_face(request: FaceVerificationRequest):
         distance = result.get("distance", 1.0)
         is_match = distance < threshold
 
-        # Clean up temp files
         os.remove(id_path)
         os.remove(ref_path)
 
         return {
             "match": is_match,
+            "distance": round(distance, 4),
+            "threshold": threshold
         }
 
     except Exception as e:
         logger.error(f"Verification failed: {e}")
         return {"error": "Verification error"}
 
+# --- GET / ---
 @app.get("/")
 async def root():
     return {"message": "Face Verification API"}
